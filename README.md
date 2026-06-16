@@ -8,13 +8,14 @@ It shows the active account, 5 hour usage, 7 day usage, reset countdowns, and ru
 
 - macOS 14 Sonoma or newer
 - Xcode command line tools if building from source
+- [Homebrew](https://brew.sh/) for the install commands below
 - [`xcodegen`](https://github.com/yonaskolb/XcodeGen) if regenerating the Xcode project
 - [`cswap`](https://pypi.org/project/claude-swap/) from the `claude-swap` package
 
-Install the `cswap` dependency with `uv`:
+Install build dependencies and the `cswap` dependency:
 
 ```bash
-brew install uv
+brew install xcodegen uv
 uv tool install claude-swap
 cswap --version
 ```
@@ -32,7 +33,7 @@ ClaudeMonitor looks for `cswap` in these locations:
 Paste this into Claude Code from any working folder:
 
 ```text
-Clone <repository-url> and make ClaudeMonitor fully installed on this Mac. Install any missing local dependencies needed to build and run it, including Xcode command line tools, xcodegen, uv, and the claude-swap/cswap CLI. Run ./build.sh, mount the generated ClaudeMonitor.dmg, copy ClaudeMonitor.app into /Applications replacing any older ClaudeMonitor.app, unmount the image, launch /Applications/ClaudeMonitor.app, and verify that cswap --version works and the app is running. Keep everything local to my machine; do not publish, commit, or push anything.
+Clone https://github.com/tommaso1532/ClaudeMonitor.git and make ClaudeMonitor fully installed on this Mac. Install any missing local dependencies needed to build and run it, including Xcode command line tools, Homebrew, xcodegen, uv, and the claude-swap/cswap CLI. Run ./build.sh, mount the generated ClaudeMonitor.dmg, quit any running ClaudeMonitor app, copy ClaudeMonitor.app into /Applications replacing any older ClaudeMonitor.app, unmount the image, launch /Applications/ClaudeMonitor.app, and verify that cswap --version works and the app is running. Keep everything local to my machine; do not publish, commit, or push anything.
 ```
 
 ## Build And Install Locally
@@ -40,12 +41,23 @@ Clone <repository-url> and make ClaudeMonitor fully installed on this Mac. Insta
 Clone the repo and run the build script:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/tommaso1532/ClaudeMonitor.git
 cd ClaudeMonitor
 ./build.sh
 ```
 
-Then open the generated installer image in `dist/`, drag `ClaudeMonitor.app` into `Applications`, and launch it.
+Then install the generated app:
+
+```bash
+APP_MOUNT="$(mktemp -d /tmp/ClaudeMonitor.XXXXXX)"
+osascript -e 'quit app "ClaudeMonitor"' || true
+hdiutil attach dist/ClaudeMonitor.dmg -mountpoint "$APP_MOUNT" -quiet
+rm -rf /Applications/ClaudeMonitor.app
+cp -R "$APP_MOUNT/ClaudeMonitor.app" /Applications/
+hdiutil detach "$APP_MOUNT" -quiet
+rmdir "$APP_MOUNT" 2>/dev/null || true
+open /Applications/ClaudeMonitor.app
+```
 
 ## How It Works With cswap
 
